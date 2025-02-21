@@ -1,75 +1,122 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase.config';
+import { COLORS, globalStyles } from '../theme/colors';
 
-export default function RegisterScreen({ navigation }) {
+const Register = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleRegister = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Home');
-    } catch (error) {
-      setError('Erreur d\'inscription: ' + error.message);
+      if (password !== confirmPassword) {
+        setError('Les mots de passe ne correspondent pas');
+        return;
+      }
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mot de passe"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>S'inscrire</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text>Déjà un compte ? Se connecter</Text>
-      </TouchableOpacity>
+      <View style={styles.formContainer}>
+        <Text style={styles.title}>Inscription</Text>
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor={COLORS.text.muted}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Mot de passe"
+          placeholderTextColor={COLORS.text.muted}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmer le mot de passe"
+          placeholderTextColor={COLORS.text.muted}
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+        
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        
+        <TouchableOpacity 
+          style={styles.registerButton} 
+          onPress={handleRegister}
+        >
+          <Text style={styles.buttonText}>S'inscrire</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.loginLink}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.loginText}>
+            Déjà un compte ? Se connecter
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    ...globalStyles.container,
     justifyContent: 'center',
-    padding: 20,
+  },
+  formContainer: {
+    ...globalStyles.card,
+    marginHorizontal: 20,
+  },
+  title: {
+    ...globalStyles.title,
+    textAlign: 'center',
+    fontSize: 28,
+    marginBottom: 30,
   },
   input: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 15,
-    padding: 10,
-    borderRadius: 5,
+    ...globalStyles.input,
   },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 10,
+  registerButton: {
+    ...globalStyles.button,
+    backgroundColor: COLORS.primary,
+    marginTop: 20,
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
+    ...globalStyles.buttonText,
   },
-  error: {
-    color: 'red',
+  loginLink: {
+    marginTop: 15,
+    padding: 10,
+  },
+  loginText: {
+    color: COLORS.text.secondary,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  errorText: {
+    color: COLORS.danger,
+    textAlign: 'center',
     marginBottom: 10,
   },
 });
+
+export default Register; 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
-import { db, auth } from '../service/firebase';
+import { db, auth } from '../../firebase.config';
 
 const CreateSuivis = ({ navigation }) => {
   const [seances, setSeances] = useState([]);

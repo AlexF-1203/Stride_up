@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { collection, addDoc, getDocs, query } from 'firebase/firestore';
-import { db, auth } from '../service/firebase';
-import { Picker } from '@react-native-picker/picker';
+import { db, auth } from '../../firebase.config';
 import { COLORS, globalStyles } from '../theme/colors';
 import { MaterialIcons } from '@expo/vector-icons';
 

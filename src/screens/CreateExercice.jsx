@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
-import { db, auth } from '../service/firebase';
+import { db, auth } from '../../firebase.config';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 const CreateExercice = ({ navigation }) => {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { auth, db } from '../../firebase';
+import { auth, db } from '../../firebase.config';
 import { COLORS, globalStyles } from '../theme/colors';
 import { MaterialIcons } from '@expo/vector-icons';
 

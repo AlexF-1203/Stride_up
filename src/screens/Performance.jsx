@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Dimensions } from 'react-native';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db, auth } from '../service/firebase';
+import { db, auth } from '../../firebase.config';
 import { LineChart } from 'react-native-chart-kit';
 import { COLORS, globalStyles } from '../theme/colors';
 

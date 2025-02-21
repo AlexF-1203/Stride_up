@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { doc, getDoc, collection, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
-import { db } from '../service/firebase';
+import { db } from '../../firebase.config';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, globalStyles } from '../theme/colors';
 

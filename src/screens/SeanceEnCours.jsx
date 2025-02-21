@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, PanResponder, Animated } from 'react-native';
 import { collection, addDoc, doc, updateDoc, writeBatch, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db, auth } from '../service/firebase';
+import { db, auth } from '../../firebase.config';
 
 const COLORS = {
   background: '#1A1B1E',       // Fond principal très sombre
