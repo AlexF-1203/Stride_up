@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "192169212537",
+    "project_id": "stride-up-e704a",
+    "storage_bucket": "stride-up-e704a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192169212537:android:d33eddc291454234d032a8",
+        "android_client_info": {
+          "package_name": "com.ginn1203.strideup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB37FeaE9TDSOjjCQktAOmrdpFCABgY79E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
