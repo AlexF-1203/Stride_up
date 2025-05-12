@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, PanResponder, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert, PanResponder, Animated, BackHandler } from 'react-native';
 import { collection, addDoc, doc, updateDoc, writeBatch, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db, auth } from '../../firebase.config';
+import { useFocusEffect } from '@react-navigation/native';
 
 const COLORS = {
   background: '#1A1B1E',       // Fond principal très sombre
@@ -83,6 +84,7 @@ const SeanceEnCours = ({ route, navigation }) => {
         const q = query(
           collection(db, 'suivis'),
           where('exercice_id', '==', exercice.exercice_id),
+          where('user_id', '==', user.uid),
           orderBy('date', 'desc'),
           limit(1)
         );
@@ -177,15 +179,17 @@ const SeanceEnCours = ({ route, navigation }) => {
       for (let i = 0; i < exercices.length; i++) {
         const exercice = exercices[i];
         
+        const exerciceSeries = series[i] || [];
+        
         const suiviData = {
           user_id: user.uid,
           seance_id: seanceId,
           exercice_id: exercice.exercice_id,
           date: new Date(),
-          series: series[i] || [],
+          series: exerciceSeries,
           progression: {
-            charge_max: Math.max(...(series[i] || []).map(s => s.charge)),
-            volume_total: (series[i] || []).reduce((acc, s) => acc + (s.charge * s.reps), 0)
+            charge_max: Math.max(...exerciceSeries.map(s => Number(s.charge) || 0), 0),
+            volume_total: exerciceSeries.reduce((acc, s) => acc + ((Number(s.charge) || 0) * (Number(s.reps) || 0)), 0)
           },
           duration: timer,
           laps: laps,
@@ -219,6 +223,31 @@ const SeanceEnCours = ({ route, navigation }) => {
     return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${padMilli(milliseconds)}`;
   };
 
+  // Ajouter un gestionnaire de retour arrière pour éviter de quitter accidentellement
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        Alert.alert(
+          'Quitter la séance',
+          'Voulez-vous vraiment quitter cette séance ? Toutes les données non enregistrées seront perdues.',
+          [
+            { text: 'Annuler', style: 'cancel', onPress: () => {} },
+            { 
+              text: 'Quitter', 
+              style: 'destructive', 
+              onPress: () => navigation.navigate('Home') 
+            }
+          ],
+          { cancelable: false }
+        );
+        return true; // Empêche le comportement par défaut
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    }, [navigation])
+  );
+
   return (
     <View style={styles.mainContainer}>
       <ScrollView style={styles.scrollContainer}>
@@ -229,33 +258,39 @@ const SeanceEnCours = ({ route, navigation }) => {
         </View>
 
         <View style={styles.navigationContainer}>
+          {currentExerciceIndex > 0 && (
+            <TouchableOpacity
+              style={[styles.navigationButton, styles.prevButton]}
+              onPress={() => setCurrentExerciceIndex(currentExerciceIndex - 1)}
+            >
+              <Text style={styles.navigationButtonText}>Précédent</Text>
+            </TouchableOpacity>
+          )}
+          
           <TouchableOpacity
-            style={styles.navButton}
+            style={[styles.navigationButton, styles.finishButton]}
             onPress={() => {
-              if (currentExerciceIndex > 0) {
-                setCurrentExerciceIndex(currentExerciceIndex - 1);
-              }
+              Alert.alert(
+                'Terminer la séance',
+                'Voulez-vous terminer la séance maintenant ? Les exercices non complétés seront enregistrés avec des valeurs nulles.',
+                [
+                  { text: 'Annuler', style: 'cancel' },
+                  { text: 'Terminer', onPress: handleFinishWorkout }
+                ]
+              );
             }}
-            disabled={currentExerciceIndex === 0}
           >
-            <Text style={styles.navButtonText}>← Précédent</Text>
+            <Text style={styles.navigationButtonText}>Terminer</Text>
           </TouchableOpacity>
-
-          <Text style={styles.exerciceCounter}>
-            Exercice {currentExerciceIndex + 1}/{exercices.length}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => {
-              if (currentExerciceIndex < exercices.length - 1) {
-                setCurrentExerciceIndex(currentExerciceIndex + 1);
-              }
-            }}
-            disabled={currentExerciceIndex === exercices.length - 1}
-          >
-            <Text style={styles.navButtonText}>Suivant →</Text>
-          </TouchableOpacity>
+          
+          {currentExerciceIndex < exercices.length - 1 && (
+            <TouchableOpacity
+              style={[styles.navigationButton, styles.nextButton]}
+              onPress={() => setCurrentExerciceIndex(currentExerciceIndex + 1)}
+            >
+              <Text style={styles.navigationButtonText}>Suivant</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {lastPerformances[exerciceActuel?.exercice_id] && (
@@ -264,20 +299,12 @@ const SeanceEnCours = ({ route, navigation }) => {
             <Text style={styles.lastPerformanceText}>
               Charge max : {lastPerformances[exerciceActuel.exercice_id].progression.charge_max}kg
             </Text>
+            <Text style={styles.lastPerformanceTitle}>Objectif : </Text>
             <Text style={styles.lastPerformanceText}>
-              Volume total : {lastPerformances[exerciceActuel.exercice_id].progression.volume_total}kg
+            {exerciceActuel?.parametres?.repetitions} répétitions
             </Text>
           </View>
         )}
-
-        <View style={styles.parametresContainer}>
-          <Text style={styles.parametresText}>
-            Objectif : {exerciceActuel?.parametres?.repetitions} répétitions
-          </Text>
-          <Text style={styles.parametresText}>
-            Tempo : {exerciceActuel?.parametres?.tempo}
-          </Text>
-        </View>
 
         <View style={styles.inputContainer}>
           <View style={styles.inputGroup}>
@@ -358,16 +385,6 @@ const SeanceEnCours = ({ route, navigation }) => {
         >
           <Text style={styles.buttonText}>Enregistrer la série</Text>
         </TouchableOpacity>
-
-        {currentExerciceIndex === exercices.length - 1 &&
-         series[currentExerciceIndex]?.length === nombreSeries && (
-          <TouchableOpacity
-            style={[styles.saveButton, styles.finishButton]}
-            onPress={handleFinishWorkout}
-          >
-            <Text style={styles.buttonText}>Terminer la séance</Text>
-          </TouchableOpacity>
-        )}
       </ScrollView>
 
       <Animated.View 
@@ -463,24 +480,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
-  navButton: {
+  navigationButton: {
     padding: 12,
-    backgroundColor: COLORS.surface,
     borderRadius: 12,
     minWidth: 100,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderWidth: 0,
   },
-  navButtonText: {
-    color: COLORS.primary,
+  navigationButtonText: {
+    color: COLORS.text.primary,
     fontSize: 14,
     fontWeight: '600',
   },
-  exerciceCounter: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: COLORS.text.secondary,
+  prevButton: {
+    backgroundColor: COLORS.secondary, // Violet plus foncé
+  },
+  finishButton: {
+    backgroundColor: COLORS.danger, // Rouge plus vif
+  },
+  nextButton: {
+    backgroundColor: COLORS.secondary, // Bleu plus foncé
   },
   parametresContainer: {
     margin: 20,
@@ -569,9 +588,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-  },
-  finishButton: {
-    backgroundColor: COLORS.success,
   },
   buttonText: {
     color: COLORS.text.primary,

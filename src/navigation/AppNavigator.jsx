@@ -1,5 +1,10 @@
 import React from 'react';
+import { TouchableOpacity, Alert } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { MaterialIcons } from '@expo/vector-icons';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../firebase.config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -13,10 +18,10 @@ import CreateSuivis from '../screens/CreateSuivis';
 
 const Stack = createNativeStackNavigator();
 
-export default function AppNavigator() {
+export default function AppNavigator({ initialRoute = 'Login' }) {
   return (
     <Stack.Navigator 
-      initialRouteName="Login"
+      initialRouteName={initialRoute}
       screenOptions={{
         headerStyle: {
           backgroundColor: '#1A1B1E',
@@ -37,11 +42,38 @@ export default function AppNavigator() {
         component={RegisterScreen} 
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ headerShown: false }}
-      />
+     <Stack.Screen 
+  name="Home" 
+  component={HomeScreen} 
+  options={({ navigation }) => ({
+    headerShown: true,
+    title: 'Bienvenue',
+    headerBackVisible: false, 
+    headerLeft: null,
+    headerRight: () => (
+      <TouchableOpacity 
+        onPress={async () => {
+          try {
+            // Effacer la préférence "rester connecté"
+            await AsyncStorage.removeItem('@rememberMe');
+            
+            // Déconnexion de Firebase
+            await signOut(auth);
+            
+            // Naviguer vers Login seulement après une déconnexion réussie
+            navigation.replace('Login');
+          } catch (error) {
+            console.error('Erreur lors de la déconnexion:', error);
+            Alert.alert('Erreur', 'Impossible de se déconnecter. Veuillez réessayer.');
+          }
+        }}
+        style={{ marginRight: 15 }}
+      >
+        <MaterialIcons name="logout" size={24} color="#F3F4F6" />
+      </TouchableOpacity>
+    ),
+  })}
+/>
       <Stack.Screen 
         name="CreateSeance" 
         component={CreateSeance}

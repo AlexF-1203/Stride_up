@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../firebase.config';
 import { COLORS, globalStyles } from '../theme/colors';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Home = ({ navigation, route }) => {
   const [seances, setSeances] = useState([]);
@@ -24,6 +25,8 @@ const Home = ({ navigation, route }) => {
 
   const fetchSeances = async () => {
     try {
+      if (!user) return;
+      
       const q = query(
         collection(db, 'seances'),
         where('user_id', '==', user.uid)
@@ -41,10 +44,17 @@ const Home = ({ navigation, route }) => {
 
   const handleLogout = async () => {
     try {
+      // Effacer la préférence "rester connecté"
+      await AsyncStorage.removeItem('@rememberMe');
+      
+      // Déconnexion de Firebase
       await signOut(auth);
-      navigation.navigate('Login');
+      
+      // Utiliser replace au lieu de navigate pour éviter de revenir en arrière
+      navigation.replace('Login');
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
+      Alert.alert('Erreur', 'Impossible de se déconnecter. Veuillez réessayer.');
     }
   };
 
@@ -69,12 +79,12 @@ const Home = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={styles.welcomeText}>Bienvenue</Text>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <MaterialIcons name="logout" size={24} color={COLORS.text.primary} />
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <FlatList
         data={seances}
@@ -144,7 +154,7 @@ const styles = StyleSheet.create({
   addButton: {
     position: 'absolute',
     bottom: 30,
-    right: 30,
+    alignSelf: 'center',
     width: 60,
     height: 60,
     borderRadius: 30,

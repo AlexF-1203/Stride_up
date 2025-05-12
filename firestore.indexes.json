@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "suivis",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "exercice_id", "order": "ASCENDING" },
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    }
+  ]
+} 

@@ -217,6 +217,7 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     marginTop: 20,
+    marginBottom: 25,
     backgroundColor: COLORS.surface,
     padding: 15,
     borderRadius: 12,

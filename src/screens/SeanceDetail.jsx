@@ -166,9 +166,6 @@ const SeanceDetail = ({ route, navigation }) => {
                   {exercice.parametres.repetitions} répétitions
                 </Text>
                 <Text style={styles.paramText}>
-                  Tempo: {exercice.parametres.tempo}
-                </Text>
-                <Text style={styles.paramText}>
                   Repos: {exercice.parametres.repos}s
                 </Text>
               </View>
